@@ -1,0 +1,24 @@
+@import "tailwindcss";
+@source "../views";
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+@theme {
+  --font-sans: "Instrument Sans", ui-sans-serif, system-ui, sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+}
+
+/* Custom Components */
+.classroom-card {
+  @apply max-w-sm mx-auto bg-white rounded-xl shadow-md overflow-hidden border border-gray-200
+        hover:shadow-lg hover:-translate-y-1 transition-all duration-300
+        focus-within:ring-2 focus-within:ring-blue-500 focus-within:outline-none;
+}
+
+.primary-button {
+  @apply mt-4 inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition focus:outline-none focus:ring-2 focus:ring-blue-500;
+}
+
