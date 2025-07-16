@@ -1,18 +1,23 @@
 <?php
 
 use App\Http\Controllers\ClassroomController;
-use App\Http\Controllers\NotificationController;
-use App\Models\Classroom;
+use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-	return view('welcome');
-})->name('home');
-
-Route::get('/hello', function () {
-	return 'Hello World';
+    return view('welcome');
 });
 
-Route::get('/send-notification', [NotificationController::class, 'send']);
+Route::get('/dashboard', function () {
+    return view('dashboard');
+})->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::resource('classrooms', ClassroomController::class);
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+Route::resource('/classrooms', ClassroomController::class)->middleware('auth');
+
+require __DIR__.'/auth.php';
