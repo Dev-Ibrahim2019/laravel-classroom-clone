@@ -7,8 +7,8 @@ use App\Http\Requests\Classroom\UpdateClassroomRequest;
 use App\Models\Classroom;
 use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
-use Illuminate\Support\Timebox;
 use Illuminate\Validation\ValidationException;
 
 class ClassroomController extends Controller
@@ -18,7 +18,10 @@ class ClassroomController extends Controller
      */
     public function index(Request $request): Renderable
     {
-        $classrooms = Classroom::orderByDesc('name')->get();
+        $classrooms = Classroom::status('active')
+            ->recent()
+            ->get();
+
         return view('classroom.index', compact('classrooms'));
     }
 
@@ -53,6 +56,7 @@ class ClassroomController extends Controller
             // Add the extra fields to the validated data
             $validated['cover_image_path'] = $coverImagePath;
             $validated['code'] = $code;
+            $validated['user_id'] = Auth::id();
 
             // Create the classroom
             Classroom::create($validated);
@@ -123,16 +127,37 @@ class ClassroomController extends Controller
     {
         $classroom->delete();
 
-        $coverImage = $classroom->cover_image_path;
-        if ($coverImage) {
-            Classroom::deleteCoverImage($coverImage);
-        }
-
-        toastr()
-            ->closeButton(true)
-            ->info('Classroom deleted!');
-
-        // flash()->info('classroom deleted successfully!');
+        flash()->info('classroom deleted successfully!');
         return redirect()->route('classrooms.index');
+    }
+
+    public function trashed()
+    {
+        $classrooms = Classroom::onlyTrashed()
+            ->latest('deleted_at')
+            ->get();
+
+        return view('classroom.trashed', compact('classrooms'));
+    }
+
+    public function restore($id)
+    {
+        $classroom = Classroom::onlyTrashed()->findOrFail($id);
+        $classroom->restore();
+
+        return redirect()
+            ->route('classrooms.index')
+            ->with('success', 'Classroom restored!');
+    }
+
+    public function forceDelete($id)
+    {
+        $classroom = Classroom::onlyTrashed()->findOrFail($id);
+        $classroom->forceDelete();
+
+        Classroom::deleteCoverImage($classroom->cover_image_path);
+
+        flash()->info('Deleted Permentally');
+        return to_route('classrooms.trashed');
     }
 }
