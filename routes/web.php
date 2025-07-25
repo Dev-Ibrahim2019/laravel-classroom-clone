@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ClassroomController;
+use App\Http\Controllers\JoinClassroomController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -18,12 +19,20 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-Route::middleware('auth')->prefix('/classrooms')->as('classrooms.')->group(function() {
-    Route::get('/trashed', [ClassroomController::class, 'trashed'])->name('trashed');
-    Route::put('/trashed/{classroom}', [ClassroomController::class, 'restore'])->name('restore');
-    Route::delete('/trashed/{classroom}', [ClassroomController::class, 'forceDelete'])->name('force-delete');
+Route::middleware(['auth'])->group(function () {
+    Route::prefix('classrooms')->as('classrooms.')->group(function () {
+        Route::get('trashed', [ClassroomController::class, 'trashed'])->name('trashed');
+        Route::put('trashed/{classroom}', [ClassroomController::class, 'restore'])->name('restore');
+        Route::delete('trashed/{classroom}', [ClassroomController::class, 'forceDelete'])->name('force-delete');
+
+        Route::get('{classroom}/join', [JoinClassroomController::class, 'create'])
+            ->middleware('signed')
+            ->name('join');
+        Route::post('{classroom}/join', [JoinClassroomController::class, 'store'])
+            ->name('store-join');
+    });
+
+    Route::resource('/classrooms', ClassroomController::class);
 });
 
-Route::resource('/classrooms', ClassroomController::class)->middleware('auth');
-
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

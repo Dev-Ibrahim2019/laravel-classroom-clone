@@ -49,6 +49,14 @@
                 </div>
             @endif
 
+            <div class="my-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-2">Invitation Link</h3>
+
+                <div class="bg-gray-100 text-gray-700 text-sm px-4 py-3 rounded-lg overflow-x-auto">
+                    {{ $invitation_link }}
+                </div>
+            </div>
+
             {{-- Additional Details (You can add more fields here) --}}
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-700">
                 <div>

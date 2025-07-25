@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class Classroom extends Model
@@ -16,8 +17,14 @@ class Classroom extends Model
     public static string $disk = 'public';
 
     protected $fillable = [
-        'name', 'section', 'subject', 'room', 'theme', 'cover_image_path',
-        'code', 'user_id'
+        'name',
+        'section',
+        'subject',
+        'room',
+        'theme',
+        'cover_image_path',
+        'code',
+        'user_id'
     ];
 
     public static function booted()
@@ -53,5 +60,15 @@ class Classroom extends Model
     public function scopeStatus(Builder $query, $status)
     {
         $query->where('status', $status);
+    }
+
+    public function join($user_id, $role = 'student')
+    {
+        return DB::table('classroom_user')->insertOrIgnore([
+            'classroom_id' => $this->id,
+            'user_id' => $user_id,
+            'role' => $role,
+            'created_at' => now()
+        ]);
     }
 }

@@ -5,9 +5,13 @@ namespace App\Http\Controllers;
 use App\Http\Requests\Classroom\StoreClassroomRequest;
 use App\Http\Requests\Classroom\UpdateClassroomRequest;
 use App\Models\Classroom;
+use Exception;
 use Illuminate\Contracts\Support\Renderable;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -58,8 +62,23 @@ class ClassroomController extends Controller
             $validated['code'] = $code;
             $validated['user_id'] = Auth::id();
 
-            // Create the classroom
-            Classroom::create($validated);
+            DB::beginTransaction();
+
+            try {
+                // 1. Create the classroom
+                $classroom = Classroom::create($validated);
+
+                // 2. Join to classroom as a Teacher
+                $classroom->join(Auth::id(), 'teacher');
+
+                DB::commit();
+            } catch (QueryException $e) {
+                DB::rollBack();
+
+                return back()
+                    ->with('error', $e->getMessage())
+                    ->withInputs();
+            }
 
             flash()->success("{$validated['name']} classroom created successfully!");
             return to_route('classrooms.index');
@@ -77,7 +96,12 @@ class ClassroomController extends Controller
      */
     public function show(Classroom $classroom)
     {
-        return view('classroom.show', compact('classroom'));
+        $invitation_link = URL::signedRoute('classrooms.join', [
+            'classroom' => $classroom->id,
+            'code' => $classroom->code
+        ]);
+
+        return view('classroom.show', compact('classroom', 'invitation_link'));
     }
 
     /**
