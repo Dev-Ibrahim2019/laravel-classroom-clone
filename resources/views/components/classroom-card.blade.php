@@ -1,6 +1,6 @@
-<a href="{{ route('classrooms.show', $classroom->id) }}" class="block">
+<a href="{{ $classroom->url }}" class="block">
     <div class="classroom-card">
-        <img class="w-full h-48 object-cover" src="{{ asset('storage/' . $classroom->cover_image_path ) ?? 'https://placehold.co/400x200?text=Classroom+Image' }}"
+        <img class="w-full h-48 object-cover" src="{{ asset($classroom->cover_image_path) }}"
             alt="{{ $classroom->name }} image">
         <div class="p-4">
             <h2 class="text-xl font-semibold text-gray-800 font-sans">{{ $classroom->name }}</h2>
@@ -9,5 +9,3 @@
         </div>
     </div>
 </a>
-
-

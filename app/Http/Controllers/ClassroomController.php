@@ -5,15 +5,10 @@ namespace App\Http\Controllers;
 use App\Http\Requests\Classroom\StoreClassroomRequest;
 use App\Http\Requests\Classroom\UpdateClassroomRequest;
 use App\Models\Classroom;
-use Exception;
 use Illuminate\Contracts\Support\Renderable;
-use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\URL;
-use Illuminate\Support\Str;
-use Illuminate\Validation\ValidationException;
 
 class ClassroomController extends Controller
 {
@@ -42,52 +37,29 @@ class ClassroomController extends Controller
      */
     public function store(StoreClassroomRequest $request)
     {
+        $validated = $request->validated();
+
+        if (request()->hasFile('cover_image')) {
+            $file = request()->file('cover_image');
+            $validated['cover_image_path'] = Classroom::uploadcoverimage($file);
+        }
+
+        DB::beginTransaction();
+
         try {
-            // Handle file upload first
-            $coverImagePath = null;
-            if (request()->hasFile('cover_image')) {
-                $file = request()->file('cover_image');
-                $coverImagePath = Classroom::uploadcoverimage($file);
-            }
+            $classroom = Classroom::create($validated);
 
-            // Generate a random code
-            $code = Str::random(8);
+            $classroom->join(Auth::id(), 'teacher');
 
+            DB::commit();
 
-            // Validate the request
-            $validated = $request->validated();
-
-            // Add the extra fields to the validated data
-            $validated['cover_image_path'] = $coverImagePath;
-            $validated['code'] = $code;
-            $validated['user_id'] = Auth::id();
-
-            DB::beginTransaction();
-
-            try {
-                // 1. Create the classroom
-                $classroom = Classroom::create($validated);
-
-                // 2. Join to classroom as a Teacher
-                $classroom->join(Auth::id(), 'teacher');
-
-                DB::commit();
-            } catch (QueryException $e) {
-                DB::rollBack();
-
-                return back()
-                    ->with('error', $e->getMessage())
-                    ->withInputs();
-            }
-
-            flash()->success("{$validated['name']} classroom created successfully!");
+            flash()->success("{$classroom->name} classroom created successfully!");
             return to_route('classrooms.index');
-        } catch (ValidationException $e) {
-            // Flash all error messages
-            foreach ($e->validator->errors()->all() as $error) {
-                flash()->error($error);
-            }
-            return back()->withErrors($e->validator)->withInput();
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            flash()->error('Failed to create classroom: ' . $e->getMessage());
+            return back()->withInput();
         }
     }
 
@@ -96,12 +68,7 @@ class ClassroomController extends Controller
      */
     public function show(Classroom $classroom)
     {
-        $invitation_link = URL::signedRoute('classrooms.join', [
-            'classroom' => $classroom->id,
-            'code' => $classroom->code
-        ]);
-
-        return view('classroom.show', compact('classroom', 'invitation_link'));
+        return view('classroom.show', compact('classroom'));
     }
 
     /**
@@ -178,8 +145,6 @@ class ClassroomController extends Controller
     {
         $classroom = Classroom::onlyTrashed()->findOrFail($id);
         $classroom->forceDelete();
-
-        Classroom::deleteCoverImage($classroom->cover_image_path);
 
         flash()->info('Deleted Permentally');
         return to_route('classrooms.trashed');

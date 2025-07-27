@@ -20,8 +20,7 @@
             </div>
 
             {{-- Classroom Cover Image --}}
-            <img class="w-full h-80 object-cover rounded-lg mb-6 shadow-md"
-                src="{{ asset('storage/' . $classroom->cover_image_path) ?? 'https://placehold.co/600x300?text=Classroom+Image' }}"
+            <img class="w-full h-80 object-cover rounded-lg mb-6 shadow-md" src="{{ asset($classroom->cover_image_path) }}"
                 alt="{{ $classroom->name }} image">
 
             {{-- Classroom Details --}}
@@ -53,7 +52,7 @@
                 <h3 class="text-lg font-semibold text-gray-800 mb-2">Invitation Link</h3>
 
                 <div class="bg-gray-100 text-gray-700 text-sm px-4 py-3 rounded-lg overflow-x-auto">
-                    {{ $invitation_link }}
+                    {{ $classroom->invitation_link }}
                 </div>
             </div>
 

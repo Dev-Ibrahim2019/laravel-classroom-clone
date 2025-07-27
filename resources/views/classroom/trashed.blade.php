@@ -7,8 +7,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
                 @forelse ($classrooms as $classroom)
                     <div class="classroom-card">
-                        <img class="w-full h-48 object-cover"
-                            src="{{ asset('storage/' . $classroom->cover_image_path) ?? 'https://placehold.co/400x200?text=Classroom+Image' }}"
+                        <img class="w-full h-48 object-cover" src="{{ asset($classroom->cover_image_path) }}"
                             alt="{{ $classroom->name }} image">
                         <div class="p-4">
                             <h2 class="text-xl font-semibold text-gray-800 font-sans">{{ $classroom->name }}</h2>
